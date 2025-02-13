@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands, tasks
 import requests
 import os
-from keep_alive import keep_alive
 import ssl
 import certifi
 
@@ -160,6 +159,5 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=activity)
 
 
-keep_alive()  # Keeps the bot running
 
 bot.run(TOKEN)
