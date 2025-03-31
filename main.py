@@ -125,6 +125,68 @@ async def btc_manual(ctx,
         await ctx.send("❌ I can't DM you! Please enable DMs in your privacy settings.")
 
 
+@bot.command(name="btc_double",
+             help="Calculate the BTC price where you double your initial investment with leverage.")
+async def btc_double(ctx,
+                     initial_investment: float,
+                     entry_price: float,
+                     leverage: int = 1):
+    if leverage < 1:
+        await ctx.author.send("⚠️ Leverage must be at least 1x (no leverage).")
+        return
+
+    # Calculate total buying power and BTC quantity
+    total_buying_power = initial_investment * leverage
+    btc_quantity = total_buying_power / entry_price
+
+    # To double your money, profit equals initial investment, so total value is buying power + initial investment
+    target_value = total_buying_power + initial_investment
+    target_price = target_value / btc_quantity
+
+    # Current BTC price for reference
+    current_price = fetch_btc_price()
+    price_status = (
+        "✅ Current price is above your target! You’ve already doubled your money!"
+        if current_price and current_price >= target_price else
+        "⏳ Current price is below your target. Waiting to double your money."
+    )
+
+    # Liquidation price for reference
+    liquidation_price = entry_price * (1 - (1 / leverage)) if leverage > 1 else None
+    liquidation_warning = (
+        f"⚠️ **Liquidation Risk!** If BTC drops below **${liquidation_price:,.2f}**, you may be liquidated!"
+        if liquidation_price and target_price > liquidation_price else ""
+    )
+
+    embed = discord.Embed(
+        title="💰 BTC Double Money Calculator",
+        description="Here’s the BTC price where you’ll double your initial investment:",
+        color=discord.Color.gold()
+    )
+    embed.add_field(name="Initial Investment", value=f"${initial_investment:,.2f}", inline=True)
+    embed.add_field(name="Leverage", value=f"{leverage}x", inline=True)
+    embed.add_field(name="Total Buying Power", value=f"${total_buying_power:,.2f}", inline=True)
+    embed.add_field(name="Entry Price", value=f"${entry_price:,.2f} per BTC", inline=True)
+    embed.add_field(name="BTC Quantity", value=f"{btc_quantity:,.6f} BTC", inline=True)
+    embed.add_field(name="Target Value (2x)", value=f"${target_value:,.2f}", inline=True)
+    embed.add_field(name="**Target Price**", value=f"${target_price:,.2f} per BTC", inline=False)
+
+    if current_price:
+        embed.add_field(name="Current BTC Price", value=f"${current_price:,.2f}", inline=False)
+        embed.add_field(name="Status", value=price_status, inline=False)
+
+    if liquidation_warning:
+        embed.add_field(name="⚠️ Liquidation Warning", value=liquidation_warning, inline=False)
+
+    embed.set_footer(text="Powered by CoinGecko API | Plan your exit wisely!")
+
+    try:
+        await ctx.author.send(embed=embed)  # Send DM
+        await ctx.message.add_reaction("📩")  # React to confirm DM sent
+    except discord.Forbidden:
+        await ctx.send("❌ I can’t DM you! Please enable DMs in your privacy settings.")
+
+
 @bot.command(name="commands", help="Show available commands.")
 async def custom_help(ctx):
     embed = discord.Embed(title="📜 Profit BTC Bot Commands",
@@ -137,6 +199,10 @@ async def custom_help(ctx):
     embed.add_field(
         name="!btc_manual <investment> <purchase_price> <exit_price> <leverage>",
         value="Calculates profit/loss with a custom exit price instead of fetching live data.",
+        inline=False)
+    embed.add_field(
+        name="!btc_double <investment> <entry_price> <leverage>",
+        value="Calculates the BTC price where you double your initial investment.",
         inline=False)
     embed.add_field(name="!commands",
                     value="Shows this help message.",
@@ -157,7 +223,6 @@ async def on_ready():
     print(f"✅ Bot is online as {bot.user}")
     activity = discord.Game(name="BTC Profit Analysis 💹")
     await bot.change_presence(status=discord.Status.online, activity=activity)
-
 
 
 bot.run(TOKEN)
