@@ -7,21 +7,19 @@ import certifi
 
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")  # Replace with your bot token
+TOKEN = os.getenv("DISCORD_BOT_TOKEN") 
 PREFIX = "!"
 
 intents = discord.Intents.default()
-intents.message_content = True  # Enable message content intent
-
+intents.message_content = True  
 bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 
 
-# Function to fetch the current BTC price
 def fetch_btc_price():
     url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
     try:
         response = requests.get(url, timeout=10)
-        response.raise_for_status()  # Raises HTTPError for bad responses
+        response.raise_for_status() 
         data = response.json()
         return data.get("bitcoin", {}).get("usd")
     except requests.RequestException as e:
@@ -73,8 +71,8 @@ async def btc_profit(ctx,
     embed.set_footer(text="Powered by CoinGecko API | Leverage trading is risky!")
 
     try:
-        await ctx.author.send(embed=embed)  # Send DM
-        await ctx.message.add_reaction("📩")  # React to confirm DM sent
+        await ctx.author.send(embed=embed)  
+        await ctx.message.add_reaction("📩")
     except discord.Forbidden:
         await ctx.send("❌ I can't DM you! Please enable DMs in your privacy settings.")
 
@@ -119,8 +117,8 @@ async def btc_manual(ctx,
     embed.set_footer(text="Manual BTC Profit Calculator | Leverage trading is risky!")
 
     try:
-        await ctx.author.send(embed=embed)  # Send DM
-        await ctx.message.add_reaction("📩")  # React to confirm DM sent
+        await ctx.author.send(embed=embed)
+        await ctx.message.add_reaction("📩")
     except discord.Forbidden:
         await ctx.send("❌ I can't DM you! Please enable DMs in your privacy settings.")
 
@@ -135,15 +133,12 @@ async def btc_double(ctx,
         await ctx.author.send("⚠️ Leverage must be at least 1x (no leverage).")
         return
 
-    # Calculate total buying power and BTC quantity
     total_buying_power = initial_investment * leverage
     btc_quantity = total_buying_power / entry_price
 
-    # To double your money, profit equals initial investment, so total value is buying power + initial investment
     target_value = total_buying_power + initial_investment
     target_price = target_value / btc_quantity
 
-    # Current BTC price for reference
     current_price = fetch_btc_price()
     price_status = (
         "✅ Current price is above your target! You’ve already doubled your money!"
@@ -151,7 +146,6 @@ async def btc_double(ctx,
         "⏳ Current price is below your target. Waiting to double your money."
     )
 
-    # Liquidation price for reference
     liquidation_price = entry_price * (1 - (1 / leverage)) if leverage > 1 else None
     liquidation_warning = (
         f"⚠️ **Liquidation Risk!** If BTC drops below **${liquidation_price:,.2f}**, you may be liquidated!"
@@ -181,8 +175,8 @@ async def btc_double(ctx,
     embed.set_footer(text="Powered by CoinGecko API | Plan your exit wisely!")
 
     try:
-        await ctx.author.send(embed=embed)  # Send DM
-        await ctx.message.add_reaction("📩")  # React to confirm DM sent
+        await ctx.author.send(embed=embed)
+        await ctx.message.add_reaction("📩")
     except discord.Forbidden:
         await ctx.send("❌ I can’t DM you! Please enable DMs in your privacy settings.")
 
@@ -212,8 +206,8 @@ async def custom_help(ctx):
     )
 
     try:
-        await ctx.author.send(embed=embed)  # Send DM
-        await ctx.message.add_reaction("📩")  # React to confirm DM sent
+        await ctx.author.send(embed=embed)
+        await ctx.message.add_reaction("📩")
     except discord.Forbidden:
         await ctx.send("❌ I can't DM you! Please enable DMs in your privacy settings.")
 
