@@ -4,6 +4,8 @@ import requests
 import os
 import ssl
 import certifi
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 
@@ -220,3 +222,15 @@ async def on_ready():
 
 
 bot.run(TOKEN)
+
+class KeepAliveHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is alive!")
+
+def run_http_server():
+    server = HTTPServer(('0.0.0.0', 3000), KeepAliveHandler)
+    server.serve_forever()
+
+threading.Thread(target=run_http_server).start()
